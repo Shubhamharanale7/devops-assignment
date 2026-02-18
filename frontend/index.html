@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Task Notifier</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .card {
+        background: #020617;
+        border-radius: 0.75rem;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        width: 100%;
+        max-width: 480px;
+        border: 1px solid #1f2937;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.5rem;
+        color: #f9fafb;
+      }
+      p {
+        margin: 0 0 1.5rem;
+        color: #9ca3af;
+        font-size: 0.95rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+        color: #e5e7eb;
+      }
+      input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+      }
+      input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 1px #22c55e33;
+      }
+      button {
+        margin-top: 0.75rem;
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        background: #22c55e;
+        color: #022c22;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.05s ease,
+          box-shadow 0.05s ease;
+      }
+      button:hover {
+        background: #16a34a;
+        box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+        transform: translateY(-1px);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+        box-shadow: none;
+        transform: none;
+      }
+      .status {
+        margin-top: 1.25rem;
+        padding: 0.75rem 0.9rem;
+        border-radius: 0.5rem;
+        background: #020617;
+        border: 1px solid #1f2937;
+        font-size: 0.9rem;
+        word-break: break-word;
+      }
+      .status-label {
+        font-weight: 600;
+        color: #e5e7eb;
+      }
+      .status-value {
+        color: #a5b4fc;
+      }
+      .status-chip {
+        display: inline-block;
+        margin-top: 0.35rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .status-chip.in-progress {
+        background: #1e293b;
+        color: #e5e7eb;
+      }
+      .status-chip.completed {
+        background: #22c55e33;
+        color: #bbf7d0;
+        border: 1px solid #22c55e66;
+      }
+      .status-chip.failed {
+        background: #991b1b33;
+        color: #fecaca;
+        border: 1px solid #fecaca66;
+      }
+      .progress-wrap {
+        margin-top: 0.75rem;
+      }
+      .progress-bar {
+        height: 6px;
+        background: #1e293b;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+        border-radius: 999px;
+        transition: width 0.3s ease;
+      }
+      .progress-msg {
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+        color: #9ca3af;
+      }
+      .error {
+        margin-top: 0.75rem;
+        color: #fecaca;
+        font-size: 0.85rem;
+      }
+      .small {
+        margin-top: 1rem;
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+      code {
+        background: #020617;
+        padding: 0.1rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Task Notifier</h1>
+      <p>Trigger a notification task and watch its status update in real time.</p>
+
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        placeholder="dev@example.com"
+        autocomplete="off"
+      />
+      <button id="notify-btn">Send notification</button>
+
+      <div id="status" class="status" style="display: none">
+        <div>
+          <span class="status-label">Task ID:</span>
+          <span id="task-id" class="status-value"></span>
+        </div>
+        <div id="task-status-line">
+          <span class="status-label">Status:</span>
+          <span id="task-status" class="status-chip in-progress">PENDING</span>
+        </div>
+        <div id="progress-wrap" class="progress-wrap" style="display: none">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-msg" class="progress-msg">Task running… should complete shortly.</div>
+        </div>
+        <div id="task-result-line" style="margin-top: 0.5rem; display: none">
+          <span class="status-label">Result:</span>
+          <span id="task-result" class="status-value"></span>
+        </div>
+      </div>
+
+      <div id="error" class="error" style="display: none"></div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:8000";
+
+      const emailInput = document.getElementById("email");
+      const notifyBtn = document.getElementById("notify-btn");
+      const statusBox = document.getElementById("status");
+      const taskIdEl = document.getElementById("task-id");
+      const taskStatusEl = document.getElementById("task-status");
+      const taskResultLine = document.getElementById("task-result-line");
+      const taskResultEl = document.getElementById("task-result");
+      const errorEl = document.getElementById("error");
+      const progressWrap = document.getElementById("progress-wrap");
+      const progressFill = document.getElementById("progress-fill");
+      const progressMsg = document.getElementById("progress-msg");
+
+      const TASK_EST_SEC = 6;
+      const DONE_SHOW_MS = 10000;
+      let pollTimer = null;
+      let progressInterval = null;
+      let hideStatusTimer = null;
+
+      function startProgress() {
+        progressWrap.style.display = "block";
+        progressFill.style.width = "0%";
+        progressMsg.textContent = "Task running… should complete shortly.";
+        let p = 0;
+        const step = 100 / (TASK_EST_SEC * 10);
+        const stepMs = 100;
+        progressInterval = setInterval(() => {
+          p = Math.min(p + step, 95);
+          progressFill.style.width = p + "%";
+        }, stepMs);
+      }
+
+      function finishProgress(done = true) {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+        progressFill.style.width = "100%";
+        progressMsg.textContent = done ? "Done." : "Task finished.";
+      }
+
+      function hideProgress() {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+        progressWrap.style.display = "none";
+        progressFill.style.width = "0%";
+      }
+
+      function scheduleHideStatusBlock() {
+        if (hideStatusTimer) return;
+        hideStatusTimer = setTimeout(() => {
+          statusBox.style.display = "none";
+          hideStatusTimer = null;
+        }, 10000);
+      }
+
+      function setError(msg) {
+        if (!msg) {
+          errorEl.style.display = "none";
+          errorEl.textContent = "";
+          return;
+        }
+        errorEl.style.display = "block";
+        errorEl.textContent = msg;
+      }
+
+      function setStatusChip(status) {
+        const s = (status || "").toLowerCase();
+        taskStatusEl.classList.remove("in-progress", "completed", "failed");
+        if (s === "completed") {
+          taskStatusEl.classList.add("completed");
+        } else if (s === "failed") {
+          taskStatusEl.classList.add("failed");
+        } else {
+          taskStatusEl.classList.add("in-progress");
+        }
+        taskStatusEl.textContent = s.toUpperCase() || "UNKNOWN";
+      }
+
+      async function pollStatus(taskId) {
+        if (!taskId) return;
+        try {
+          const res = await fetch(`${API_BASE}/task_status/${taskId}`);
+          if (!res.ok) {
+            throw new Error(`Status HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          setStatusChip(data.status);
+
+          if (data.status === "completed") {
+            finishProgress(true);
+            if (data.result) {
+              taskResultLine.style.display = "block";
+              taskResultEl.textContent = data.result;
+            }
+            clearInterval(pollTimer);
+            pollTimer = null;
+            scheduleHideStatusBlock();
+          } else if (data.status === "failed") {
+            finishProgress(false);
+            clearInterval(pollTimer);
+            pollTimer = null;
+            scheduleHideStatusBlock();
+          }
+        } catch (err) {
+          setError(`Failed to fetch status: ${err.message}`);
+          finishProgress(false);
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      async function notify() {
+        setError(null);
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+        if (hideStatusTimer) {
+          clearTimeout(hideStatusTimer);
+          hideStatusTimer = null;
+        }
+        hideProgress();
+
+        const email = emailInput.value.trim();
+        if (!email) {
+          setError("Email is required.");
+          return;
+        }
+
+        notifyBtn.disabled = true;
+        notifyBtn.textContent = "Sending...";
+
+        try {
+          const res = await fetch(
+            `${API_BASE}/notify/?email=${encodeURIComponent(email)}`,
+            {
+              method: "POST",
+            }
+          );
+          if (!res.ok) {
+            throw new Error(`Notify HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          const taskId = data.task_id;
+
+          taskIdEl.textContent = taskId || "<missing>";
+          setStatusChip("in progress");
+          taskResultLine.style.display = "none";
+          taskResultEl.textContent = "";
+          statusBox.style.display = "block";
+          startProgress();
+
+          if (taskId) {
+            pollTimer = setInterval(() => pollStatus(taskId), 2000);
+          }
+        } catch (err) {
+          setError(`Failed to trigger task: ${err.message}`);
+        } finally {
+          notifyBtn.disabled = false;
+          notifyBtn.textContent = "Send notification";
+        }
+      }
+
+      notifyBtn.addEventListener("click", notify);
+
+      emailInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          notify();
+        }
+      });
+    </script>
+  </body>
+  </html>
+
