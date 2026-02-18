@@ -21,17 +21,17 @@ jobs:
 
       - name: Build and Push Backend
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-backend:latest ./backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-backend:latest -f backend/Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/devops-backend:latest
 
       - name: Build and Push Worker
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-worker:latest ./backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-worker:latest -f backend/Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/devops-worker:latest
 
       - name: Build and Push Frontend
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-frontend:latest ./frontend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-frontend:latest -f frontend/Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/devops-frontend:latest
 
       - name: Deploy to EC2
