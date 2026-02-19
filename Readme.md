@@ -1,50 +1,254 @@
-## DevOps Assessment Assignment
+🚀 DevOps Assignment – Production-Grade AWS Deployment
+📌 Overview
 
-### Overview
+This project demonstrates a production-style cloud-native deployment of a containerized application on AWS using Infrastructure as Code and DevOps best practices.
 
-**Key components**
+The solution includes:
+Dockerized microservices
+AWS EC2 compute layer
+Amazon ElastiCache (Redis)
+Application Load Balancer (ALB)
+CloudWatch logging & monitoring
+IAM role-based security
+Terraform-based infrastructure provisioning
 
-- **Backend** (`backend/main.py`) – FastAPI app: `POST /notify/` enqueues a Celery task, `GET /task_status/{task_id}` returns status/result.
-- **Worker** (`backend/worker.py`) – Celery worker that runs the background task.
-- **Redis** – Message broker and result backend for Celery.
-- **Frontend** (`frontend/index.html`) – Single page that triggers a task and polls until it’s done.
+This implementation focuses on:
+Security
+Scalability
+Observability
+Infrastructure automation
+Clean teardown lifecycle
 
-**Run locally (no Docker)**
+🏗 Architecture Overview
+🔷 High-Level Architecture
+                ┌──────────────────────────┐
+                │        End User          │
+                │     (Browser / API)      │
+                └────────────┬─────────────┘
+                             │
+                             ▼
+                ┌──────────────────────────┐
+                │ Application Load Balancer│
+                │   (HTTP / HTTPS ready)   │
+                └────────────┬─────────────┘
+                             │
+                             ▼
+                ┌──────────────────────────┐
+                │        EC2 Instance      │
+                │     Docker Containers    │
+                │                          │
+                │  - Backend (FastAPI)     │
+                │  - Worker (Celery)       │
+                │  - Frontend (Nginx)      │
+                └────────────┬─────────────┘
+                             │
+                             ▼
+                ┌──────────────────────────┐
+                │  Amazon ElastiCache      │
+                │        Redis             │
+                └──────────────────────────┘
 
-1. Start Redis.
-2. From project root: `cd backend && python -m venv venv`, activate venv, `pip install -r ../requirements.txt`.
-3. Terminal 1: `cd backend && celery -A worker worker --loglevel=info`.
-4. Terminal 2: `cd backend && uvicorn main:app --reload --port 8000`.
-5. Serve frontend: simply open index.html in browser.
----
+                EC2 → CloudWatch Logs
 
-Design and implement a workflow to:
+🧩 System Components
+1️⃣ Application Load Balancer (ALB)
+Distributes incoming traffic
+Performs health checks
+Routes traffic to EC2 target group
+Designed for HTTPS (TLS termination ready)
+Production-ready entry layer
 
-- **Containerize the application**
-  - Build Docker images for the existing backend.
-  - Provide a setup to run the app locally.
-  - Identify all the hardcoded values and replace those with environment variables.
-  - Include any required local dependencies (e.g. message broker, database) as containers.
+2️⃣ EC2 Instance
+Hosts containerized services:
+FastAPI backend
+Celery worker
+Nginx frontend
 
-- **Run containers locally**
-  - Provide clear commands to:
-    - Build images.
-    - Start the full stack.
-    - View logs and debug.
+Features:
+IAM role attached (no static credentials)
+CloudWatch logging enabled
+Security group hardened
+Managed via Terraform
 
-- **Deploy to a cloud provider using code (no manual clicks)**
-  - Use **Infrastructure as Code (IaC)** to provision all cloud resources.
-  - Use **CI/CD** (GitHub Actions, GitLab CI, Azure DevOps, etc.) to build, push images, and deploy the app.
+3️⃣ Amazon ElastiCache (Redis)
+Managed Redis service
+Used as:
+Celery message broker
+Caching layer
+Deployed inside VPC
+Not publicly accessible
+Security group allows access only from EC2
 
-- **Maximize managed cloud services**
-  - Prefer managed services over self-hosted where possible.
-  - Use cloud-native logging/monitoring where reasonable (e.g. CloudWatch, Azure Monitor, Stackdriver).
+4️⃣ CloudWatch
+Centralized logging
+Application logs streamed securely
+IAM-based access control
+Enables operational visibility
 
-- **Deliverables**
-  - updated code base with IAC and build related code.
-  - document your journey in `journey.md` file.
-  - create `instructions.md` file for developers to run containerized setup locally.
-  - simple architecture diagram to showcase cloud resources.
-  - single-page frontend in `frontend/index.html` that:
-    - calls the `POST /notify/` API to trigger a background task.
-    - polls the `GET /task_status/{task_id}` API to show live task status and result.
+5️⃣ Terraform (Infrastructure as Code)
+Provisioned resources:
+Default VPC & Subnets
+
+Security Groups
+IAM Role & Instance Profile
+EC2 Instance
+ElastiCache Cluster
+Application Load Balancer
+
+Target Group & Listener
+Deployment:
+terraform init
+terraform apply
+terraform destroy
+Infrastructure is reproducible and disposable.
+
+🔒 Security Implementation
+This deployment follows industry best practices.
+SSH Hardening
+Port 22 restricted to a single trusted IP address
+No public SSH exposure
+Redis Isolation
+Redis not publicly accessible
+Access allowed only via EC2 security group reference
+IAM Best Practices
+No hardcoded AWS credentials
+EC2 uses IAM role for CloudWatch access
+Principle of least privilege followed
+Network Security
+Controlled inbound rules
+Outbound traffic restricted appropriately
+Internal service communication secured
+
+🔐 HTTPS & TLS (Production Design)
+In a real production deployment:
+AWS Certificate Manager (ACM) issues SSL certificate
+ALB listens on:
+Port 80 (redirect to HTTPS)
+Port 443 (TLS termination)
+Encrypted traffic from user to ALB
+Backend communication remains internal
+Traffic Flow:
+
+User (HTTPS)
+    ↓
+ALB (TLS Termination)
+    ↓
+EC2 Backend (HTTP internal)
+
+
+Benefits:
+Encrypted client communication
+Centralized certificate management
+Industry-standard load balancing
+
+📊 Observability & Monitoring
+ALB health checks
+Target group monitoring
+Redis cluster health monitoring
+CloudWatch centralized logging
+IAM-integrated logging pipeline
+This ensures visibility across application and infrastructure layers.
+
+📦 Containerization
+Application services are containerized using Docker:
+docker-compose up -d --build
+Services include:
+Backend (FastAPI)
+Worker (Celery)
+Frontend (Nginx)
+Architecture is stateless and horizontally scalable.
+
+📸 Deployment Screenshots
+1️⃣ EC2 Running Instance
+Instance state: Running
+Public IP visible
+IAM role attached
+
+2️⃣ Amazon ElastiCache – Redis
+Cluster ID: devops-redis
+Engine: Redis
+Node type: cache.t3.micro
+Status: Available
+Primary endpoint visible
+
+3️⃣ Application Load Balancer
+Type: Application
+Status: Active
+DNS name visible
+
+4️⃣ Target Group Health
+EC2 instance registered
+Port 8000
+Health check configuration visible
+
+5️⃣ CloudWatch Logs
+Log group created
+Log streams active
+Application logs visible
+
+6️⃣ Security Groups
+SSH restricted
+Redis secured
+Backend port controlled
+
+📈 Scalability Design
+This architecture supports horizontal scaling.
+
+Future improvements:
+Attach EC2 to Auto Scaling Group
+Multi-AZ deployment
+Redis replication group
+WAF integration
+Route53 domain integration
+CI/CD pipeline for automated Terraform deployment
+S3 backend for Terraform state locking
+
+🧠 Engineering Decisions
+Decision	Reason
+ElastiCache over self-hosted Redis	Managed, scalable, production-ready
+ALB over direct EC2 exposure	Industry-standard traffic routing
+IAM role usage	Secure credential management
+Terraform	Reproducible infrastructure
+Dockerized services	Portability & consistency
+
+⚙️ How to Reproduce
+Clone repository
+Configure AWS credentials
+Update terraform.tfvars
+
+Run:
+terraform init
+terraform apply
+Deploy application on EC2
+Access ALB DNS endpoint
+
+🧹 Cleanup
+To avoid AWS charges:
+terraform destroy
+
+🛠 Challenges Faced & Solutions
+Docker Socket Permission Issue
+Resolved by adding EC2 user to docker group and restarting session.
+ACM Validation Timeout
+Understood requirement for DNS validation and production domain ownership.
+Target Group Health Check Failures
+Resolved by verifying backend port exposure and security group configuration.
+Security Group Duplication Errors
+Refactored Terraform configuration to remove duplicate resources.
+
+🎯 What This Demonstrates
+Infrastructure as Code expertise
+Secure AWS networking
+Managed services integration
+Container orchestration
+Observability implementation
+Production deployment mindset
+Clean resource lifecycle management
+
+👨‍💻 Author
+Shubham Haranale
+DevOps | Cloud | Infrastructure Automation
+
+🏁 Final Result
+
+This implementation reflects real-world DevOps engineering principles and demonstrates the ability to design, deploy, secure, and manage cloud-native infrastructure in AWS using automation and best practices.
