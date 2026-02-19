@@ -50,6 +50,8 @@ Clean teardown lifecycle
 
                 EC2 → CloudWatch Logs
 
+
+
 🧩 System Components
 1️⃣ Application Load Balancer (ALB)
 Distributes incoming traffic
@@ -58,17 +60,23 @@ Routes traffic to EC2 target group
 Designed for HTTPS (TLS termination ready)
 Production-ready entry layer
 
+
+
 2️⃣ EC2 Instance
 Hosts containerized services:
 FastAPI backend
 Celery worker
 Nginx frontend
 
+
+
 Features:
 IAM role attached (no static credentials)
 CloudWatch logging enabled
 Security group hardened
 Managed via Terraform
+
+
 
 3️⃣ Amazon ElastiCache (Redis)
 Managed Redis service
@@ -79,15 +87,20 @@ Deployed inside VPC
 Not publicly accessible
 Security group allows access only from EC2
 
+
 4️⃣ CloudWatch
 Centralized logging
 Application logs streamed securely
 IAM-based access control
 Enables operational visibility
 
+
+
 5️⃣ Terraform (Infrastructure as Code)
 Provisioned resources:
 Default VPC & Subnets
+
+
 
 Security Groups
 IAM Role & Instance Profile
@@ -95,12 +108,16 @@ EC2 Instance
 ElastiCache Cluster
 Application Load Balancer
 
+
+
 Target Group & Listener
 Deployment:
 terraform init
 terraform apply
 terraform destroy
 Infrastructure is reproducible and disposable.
+
+
 
 🔒 Security Implementation
 This deployment follows industry best practices.
@@ -119,6 +136,8 @@ Controlled inbound rules
 Outbound traffic restricted appropriately
 Internal service communication secured
 
+
+
 🔐 HTTPS & TLS (Production Design)
 In a real production deployment:
 AWS Certificate Manager (ACM) issues SSL certificate
@@ -136,10 +155,14 @@ ALB (TLS Termination)
 EC2 Backend (HTTP internal)
 
 
+
+
 Benefits:
 Encrypted client communication
 Centralized certificate management
 Industry-standard load balancing
+
+
 
 📊 Observability & Monitoring
 ALB health checks
@@ -148,6 +171,8 @@ Redis cluster health monitoring
 CloudWatch centralized logging
 IAM-integrated logging pipeline
 This ensures visibility across application and infrastructure layers.
+
+
 
 📦 Containerization
 Application services are containerized using Docker:
@@ -158,11 +183,15 @@ Worker (Celery)
 Frontend (Nginx)
 Architecture is stateless and horizontally scalable.
 
+
+
 📸 Deployment Screenshots
 1️⃣ EC2 Running Instance
 Instance state: Running
 Public IP visible
 IAM role attached
+
+
 
 2️⃣ Amazon ElastiCache – Redis
 Cluster ID: devops-redis
@@ -171,28 +200,40 @@ Node type: cache.t3.micro
 Status: Available
 Primary endpoint visible
 
+
+
 3️⃣ Application Load Balancer
 Type: Application
 Status: Active
 DNS name visible
+
+
 
 4️⃣ Target Group Health
 EC2 instance registered
 Port 8000
 Health check configuration visible
 
+
+
 5️⃣ CloudWatch Logs
 Log group created
 Log streams active
 Application logs visible
+
+
 
 6️⃣ Security Groups
 SSH restricted
 Redis secured
 Backend port controlled
 
+
+
 📈 Scalability Design
 This architecture supports horizontal scaling.
+
+
 
 Future improvements:
 Attach EC2 to Auto Scaling Group
@@ -203,6 +244,8 @@ Route53 domain integration
 CI/CD pipeline for automated Terraform deployment
 S3 backend for Terraform state locking
 
+
+
 🧠 Engineering Decisions
 Decision	Reason
 ElastiCache over self-hosted Redis	Managed, scalable, production-ready
@@ -211,10 +254,14 @@ IAM role usage	Secure credential management
 Terraform	Reproducible infrastructure
 Dockerized services	Portability & consistency
 
+
+
 ⚙️ How to Reproduce
 Clone repository
 Configure AWS credentials
 Update terraform.tfvars
+
+
 
 Run:
 terraform init
@@ -222,9 +269,13 @@ terraform apply
 Deploy application on EC2
 Access ALB DNS endpoint
 
+
+
 🧹 Cleanup
 To avoid AWS charges:
 terraform destroy
+
+
 
 🛠 Challenges Faced & Solutions
 Docker Socket Permission Issue
@@ -236,6 +287,8 @@ Resolved by verifying backend port exposure and security group configuration.
 Security Group Duplication Errors
 Refactored Terraform configuration to remove duplicate resources.
 
+
+
 🎯 What This Demonstrates
 Infrastructure as Code expertise
 Secure AWS networking
@@ -244,6 +297,8 @@ Container orchestration
 Observability implementation
 Production deployment mindset
 Clean resource lifecycle management
+
+
 
 👨‍💻 Author
 Shubham Haranale
